@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitlab-rolebinding
+  namespace: dhruv
+subjects:
+- kind: User
+  name: gitlab-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: gitlab-role
+  apiGroup: rbac.authorization.k8s.io
+
+
+  mapRoles: |
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::615299753229:role/Dhruv-AmazonEKSNodeRole
+      username: system:node:{{EC2PrivateDNSName}}
+
+    - rolearn: arn:aws:iam::615299753229:role/Dhruv-Gitlab-OIDC-ROLE
+      username: gitlab-user

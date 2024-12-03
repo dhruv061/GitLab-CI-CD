@@ -1,0 +1,45 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  AWS_REGION: "eu-west-3"
+  ECR_REPO: "615299753229.dkr.ecr.eu-west-3.amazonaws.com/dehruv-ecr-repo"
+  DOCKER_IMAGE_NAME: "hello-app"
+  CLUSTER_NAME: "Dhruv-EKS-Terraform"
+  AWS_PROFILE: "oidc"
+
+default:
+  tags:
+    - self-hosted
+  id_tokens:
+    MY_OIDC_TOKEN:
+      aud: https://gitlab.com
+
+before_script:
+  - echo "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
+  - echo "MY_OIDC_TOKEN=${MY_OIDC_TOKEN}"
+  - echo "${MY_OIDC_TOKEN}" > /tmp/web_identity_token
+  - echo -e "[profile oidc]\nrole_arn=${AWS_ROLE_ARN}\nweb_identity_token_file=/tmp/web_identity_token" > ~/.aws/config
+  - export AWS_PROFILE=oidc
+
+build:
+  stage: build
+  script:
+    - docker build -t $DOCKER_IMAGE_NAME:$CI_COMMIT_SHA .
+    - docker tag $DOCKER_IMAGE_NAME:$CI_COMMIT_SHA $ECR_REPO:$CI_COMMIT_SHA
+
+push:
+  stage: push
+  script:
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+    - docker push $ECR_REPO:$CI_COMMIT_SHA
+
+deploy:
+  stage: deploy
+  script:
+    - aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME --profile oidc
+    - sed -i "s|\${IMAGE_TAG}|$CI_COMMIT_SHA|" deployment.yaml
+    - kubectl apply -f deployment.yaml
+    - kubectl apply -f svc.yaml

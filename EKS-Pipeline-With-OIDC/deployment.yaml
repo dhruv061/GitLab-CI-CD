@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-html-app
+  namespace: dhruv
+  labels:
+    app: simple-html
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-html
+  template:
+    metadata:
+      labels:
+        app: simple-html
+    spec:
+      containers:
+      - name: simple-html-app
+        image: 615299753229.dkr.ecr.eu-west-3.amazonaws.com/dehruv-ecr-repo:${IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
