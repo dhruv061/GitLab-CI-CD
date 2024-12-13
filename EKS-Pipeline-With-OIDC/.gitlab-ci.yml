@@ -22,7 +22,7 @@ before_script:
   - echo "MY_OIDC_TOKEN=${MY_OIDC_TOKEN}"
   - echo "${MY_OIDC_TOKEN}" > /tmp/web_identity_token
   - echo -e "[profile oidc]\nrole_arn=${AWS_ROLE_ARN}\nweb_identity_token_file=/tmp/web_identity_token" > ~/.aws/config
-  - export AWS_PROFILE=oidc
+  # - export AWS_PROFILE=oidc
 
 build:
   stage: build
